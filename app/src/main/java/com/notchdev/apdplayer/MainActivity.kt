@@ -26,10 +26,13 @@ class MainActivity : AppCompatActivity() {
         songList = listOf(R.raw.excuses,R.raw.saada,R.raw.toxic)
         mPlayer = MediaPlayer.create(this,songList[0])
 
+        mPlayer?.setOnCompletionListener {
+            nextSong()
+        }
         binding.apply {
             seekBar.max = mPlayer?.duration!!
             durationTv.text = getTimeString(mPlayer?.duration!!)
-
+            progressTv.text = getTimeString(mPlayer?.currentPosition!!)
             playPauseBtn.setOnClickListener {
                 if (mPlayer?.isPlaying ?: return@setOnClickListener) {
                     mPlayer?.pause()
@@ -41,21 +44,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             prevSongBtn.setOnClickListener {
-                if(currentSongPos == 0) {
-                    currentSongPos = songList.size - 1
-                } else {
-                    currentSongPos--
-                }
-                startSong(songList[currentSongPos])
+                previousSong()
             }
 
             nextSongBtn.setOnClickListener {
-                if (currentSongPos == songList.size - 1) {
-                    currentSongPos = 0
-                } else {
-                    currentSongPos++
-                }
-                startSong(songList[currentSongPos])
+                nextSong()
             }
             seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(p0: SeekBar?, currPos: Int, fromUser: Boolean) {
@@ -98,6 +91,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    private fun nextSong() {
+        if (currentSongPos == songList.size - 1) {
+            currentSongPos = 0
+        } else {
+            currentSongPos++
+        }
+        startSong(songList[currentSongPos])
+    }
+
+    private fun previousSong() {
+        if(currentSongPos == 0) {
+            currentSongPos = songList.size - 1
+        } else {
+            currentSongPos--
+        }
+        startSong(songList[currentSongPos])
     }
 
     fun stopSong() {
