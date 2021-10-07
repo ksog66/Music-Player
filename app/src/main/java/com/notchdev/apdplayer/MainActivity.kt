@@ -2,17 +2,19 @@ package com.notchdev.apdplayer
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.notchdev.apdplayer.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
     private var mPlayer: MediaPlayer? = null
     private lateinit var binding: ActivityMainBinding
     private lateinit var songList:List<Int>
@@ -26,13 +28,8 @@ class MainActivity : AppCompatActivity() {
         songList = listOf(R.raw.excuses,R.raw.saada,R.raw.toxic)
         mPlayer = MediaPlayer.create(this,songList[0])
 
-        mPlayer?.setOnCompletionListener {
-            nextSong()
-        }
         binding.apply {
-            seekBar.max = mPlayer?.duration!!
-            durationTv.text = getTimeString(mPlayer?.duration!!)
-            progressTv.text = getTimeString(mPlayer?.currentPosition!!)
+            updateUI()
             playPauseBtn.setOnClickListener {
                 if (mPlayer?.isPlaying ?: return@setOnClickListener) {
                     mPlayer?.pause()
@@ -67,19 +64,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateUI() {
+        binding.apply {
+            seekBar.max = mPlayer?.duration!!
+            progressTv.text = getTimeString(mPlayer?.currentPosition!!)
+            durationTv.text = getTimeString(mPlayer?.duration!!)
+        }
+    }
     private fun startSong(res:Int) {
-        mPlayer?.stop()
+        Log.d("MainActive", "startSong: $res ")
+        mPlayer?.reset()
         mPlayer = MediaPlayer.create(this,res)
         playSong()
     }
 
     fun playSong() {
         mPlayer?.start()
-        binding.apply {
-            seekBar.max = mPlayer?.duration!!
-            progressTv.text = getTimeString(mPlayer?.duration!!)
+        mPlayer?.setOnCompletionListener {
+            nextSong()
         }
-
+        updateUI()
         lifecycleScope.launch(Dispatchers.Main) {
             while(mPlayer!=null) {
                 val pos = mPlayer?.currentPosition
@@ -90,7 +94,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
     }
 
     private fun nextSong() {
@@ -99,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             currentSongPos++
         }
+        Log.d(TAG, "nextSong: $currentSongPos")
         startSong(songList[currentSongPos])
     }
 
